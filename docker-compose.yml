@@ -1,0 +1,67 @@
+version: '3'
+x-airflow-common:
+  &airflow-common
+  image: ${AIRFLOW_IMAGE_NAME:-apache/airflow:2.6.3}
+  environment:
+    &airflow-common-env
+    AIRFLOW__CORE__EXECUTOR: CeleryExecutor
+    AIRFLOW_CONN_MYSQL_DEFAULT : mysql+mysqldb://db_relawan
+    AIRFLOW__CELERY__BROKER_URL: redis://:@redis:6379/0
+    AIRFLOW__CORE__FERNET_KEY: ''
+    AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
+    AIRFLOW__CORE__LOAD_EXAMPLES: 'true'
+    AIRFLOW__API__AUTH_BACKEND: 'airflow.api.auth.backend.basic_auth'
+  volumes:
+    - ./dags:/opt/airflow/dags
+    - ./logs:/opt/airflow/logs
+    - ./plugins:/opt/airflow/plugins
+  user: "${AIRFLOW_UID:-50000}:${AIRFLOW_GID:-50000}"
+  depends_on:
+    redis:
+      condition: service_healthy
+    postgres:
+      condition: service_healthy
+
+services:
+  web-server:
+    image: airflowkinetik:latest
+
+    volumes:
+      - ./airflow:/opt/airflow
+
+    ports:
+      - "8080:8080"
+    # healthcheck:
+    #   test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
+    #   interval: 10s
+    #   timeout: 10s
+    #   retries: 5
+    command: airflow standalone
+  
+  db-mysql:
+    image: mysql:5.7
+
+    volumes:
+      - my-db:/var/lib/mysql
+
+    restart: always
+    environment:
+      MYSQL_DATABASE: ''
+      MYSQL_USER: ''
+      MYSQL_PASSWORD: ''
+      MYSQL_ROOT_PASSWORD: 'd3v0pGP'
+    
+    ports:
+      - "3306:3306"
+
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    
+    expose:
+      - "3306"
+
+volumes:
+  my-db:
