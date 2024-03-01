@@ -1,4 +1,4 @@
-# Data ETL 
+# Kinetik Relawan
 The project aims to record the kinetic movement activities of volunteers throughout Indonesia, starting from campaigning activities, community empowerment through training to enhance the skills of the community, social activities aimed at mutual assistance during natural disasters. The goal is to create a dashboard map that displays the positions of volunteers, shows the number of activities per district, and the types of ongoing activities.
 
 ## About the Data
